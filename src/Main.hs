@@ -34,25 +34,27 @@ signRequest config request = do
     return $ OA.signOAuth authConfig authCred request
 
 getTimeline :: Config -> String -> IO (ThrowsError Timeline)
-getTimeline config screenName = do
-    request <- parseUrl $ statusURI ++ screenName
-    res <- withManager $ \m -> do
-        case signRequest config request of
-            Left err -> return $ err
-            Right req -> do
-                signedReq <- req
-                return $ Right $ httpLbs signedReq m
+getTimeline = undefined
+-- getTimeline config screenName = do
+--     request <- parseUrl $ statusURI ++ screenName
+--     res <- withManager $ \m -> do
+--         case signRequest config request of
+--             Left err -> return $ err
+--             Right req -> do
+--                 signedReq <- req
+--                 return $ Right $ httpLbs signedReq m
 
-    case res of
-        Left err -> return $ throwError err
-        Right response -> case eitherDecode $ responseBody response of
-            Left err -> return $ throwError $ ParseError err
-            Right decoded -> return $ return decoded
+--     case res of
+--         Left err -> return $ throwError err
+--         Right response -> case eitherDecode $ responseBody response of
+--             Left err -> return $ throwError $ ParseError err
+--             Right decoded -> return $ return decoded
 
 main :: IO ()
-main = withSocketsDo $ do
-    config <- parseConfig ".env"
-    res <- getTimeline config "b4zzl3"
-    case res of
-        Left err -> putStrLn $ show err
-        Right ts -> mapM_ print $ take 5 ts
+main = undefined
+-- main = withSocketsDo $ do
+--     config <- parseConfig ".env"
+--     res <- getTimeline config "b4zzl3"
+--     case res of
+--         Left err -> putStrLn $ show err
+--         Right ts -> mapM_ print $ take 5 ts
