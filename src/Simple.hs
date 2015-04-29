@@ -30,5 +30,5 @@ main :: IO ()
 main =
   do
     contents <- L.readFile "config.json"
-    putStrLn $ show $ (decode contents :: Maybe JSONCredentials)
+    putStrLn $ show $ liftM g $ (decode contents :: Maybe JSONCredentials)
 
