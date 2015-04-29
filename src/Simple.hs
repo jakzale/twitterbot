@@ -12,6 +12,8 @@ import GHC.Generics
 
 -- loading credentials from JSON
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as L
+import qualified Data.ByteString.Char8 as C
 
 data JSONCredentials =
   JSONCredentials { key    :: !String
@@ -19,8 +21,14 @@ data JSONCredentials =
                   }
   deriving (Show, Generic)
 
+instance FromJSON JSONCredentials
+
 g :: JSONCredentials -> Credential
-g json = newCredential (key json) (secret json)
+g json = newCredential (fmap C.pack key json) (fmap C.pack secret json)
 
 main :: IO ()
-main = putStrLn "Hello, world!"
+main =
+  do
+    contents <- L.readFile "config.json"
+    putStrLn $ show $ (decode contents :: Maybe JSONCredentials)
+
