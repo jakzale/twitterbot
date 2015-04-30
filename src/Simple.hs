@@ -16,6 +16,7 @@ import GHC.Generics
 import Network.HTTP.Conduit
 import Control.Monad.Trans.Either
 import Control.Monad.Trans
+import Control.Applicative
 
 instance FromJSON C.ByteString where
   parseJSON =  liftM C.pack . parseJSON
@@ -42,10 +43,18 @@ instance ToJSON Tweet
 
 type Timeline = EitherT String IO [Tweet]
 
-timeline' :: Timeline
-timeline' = do
+timeline' :: String -> Timeline
+timeline' name = do
+  -- L.readFile is in IO, so we need to liftIO it
   contents <- liftIO $ L.readFile "config.json"
-  return undefined
+  let myoauth = (decode contents :: Maybe OAuth)
+  let mycred  = (decode contents :: Maybe Credential)
+  req <- parseUrl $ "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=" ++ name
+  res <- withManager $ \m -> do
+    signedreq <- signOAuth (fromJust myoauth) (fromJust mycred) req
+    httpLbs signedreq m
+  -- eitherDecode returns Either, hoistEither lifts it to EitherT
+  hoistEither $ eitherDecode $ responseBody res
 
 timeline :: String -> IO (Either String [Tweet])
 timeline name = do
