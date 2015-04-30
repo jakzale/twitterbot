@@ -2,6 +2,7 @@
 module Simple where
 
 import Data.Aeson
+import Data.Maybe
 import Control.Monad
 import Web.Authenticate.OAuth
 
@@ -41,19 +42,21 @@ timeline :: String -> IO (Either String [Tweet])
 timeline name = do
   -- Loading Credentials
   contents <- L.readFile "config.json"
-  myoauth <- (decode contents :: Maybe OAuth)
-  mycred <- (decode contents :: Maybe Credential)
+  let myoauth = (decode contents :: Maybe OAuth)
+  let mycred = (decode contents :: Maybe Credential)
   -- Creating the Request
   req <- parseUrl $ "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=" ++ name
   -- Lets get the response
   -- TODO: figure out this
   res <- withManager $ \m -> do
-    signedreq <- signedOAuth 
+    signedreq <- signOAuth (fromJust myoauth) (fromJust mycred) req
+    httpLbs signedreq m
+  -- Decode the response body
+  return $ eitherDecode $ responseBody res
 
 main :: IO ()
-main =
-  do
-    contents <- L.readFile "config.json"
-    putStrLn $ show $ (decode contents :: Maybe Credential)
-    putStrLn $ show $ (decode contents :: Maybe OAuth)
-
+main = do
+  ets <- timeline "Hackage"
+  case ets of
+    Left err -> putStrLn err
+    Right ts -> mapM_ print $ take 5 ts
