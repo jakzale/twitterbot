@@ -14,6 +14,8 @@ import Data.Time.Clock (UTCTime)
 import GHC.Generics
 
 import Network.HTTP.Conduit
+import Control.Monad.Trans.Either
+import Control.Monad.Trans
 
 instance FromJSON C.ByteString where
   parseJSON =  liftM C.pack . parseJSON
@@ -37,6 +39,13 @@ data Tweet =
 
 instance FromJSON Tweet
 instance ToJSON Tweet
+
+type Timeline = EitherT String IO [Tweet]
+
+timeline' :: Timeline
+timeline' = do
+  contents <- liftIO $ L.readFile "config.json"
+  return undefined
 
 timeline :: String -> IO (Either String [Tweet])
 timeline name = do
