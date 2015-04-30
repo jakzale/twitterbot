@@ -32,7 +32,7 @@ instance FromJSON OAuth where
 
 data Tweet =
   Tweet { text       :: !Text
-        , created_at :: !UTCTime
+        -- , created_at :: !UTCTime
         } deriving (Show, Generic)
 
 instance FromJSON Tweet
