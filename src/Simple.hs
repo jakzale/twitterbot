@@ -56,22 +56,6 @@ timeline name = do
   -- eitherDecode returns Either, hoistEither lifts it to EitherT
   hoistEither $ eitherDecode $ responseBody res
 
--- timeline :: String -> IO (Either String [Tweet])
--- timeline name = do
---   -- Loading Credentials
---   contents <- L.readFile "config.json"
---   let myoauth = (decode contents :: Maybe OAuth)
---   let mycred = (decode contents :: Maybe Credential)
---   -- Creating the Request
---   req <- parseUrl $ "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=" ++ name
---   -- Lets get the response
---   -- TODO: figure out this
---   res <- withManager $ \m -> do
---     signedreq <- signOAuth (fromJust myoauth) (fromJust mycred) req
---     httpLbs signedreq m
---   -- Decode the response body
---   return $ eitherDecode $ responseBody res
-
 main :: IO ()
 main = eitherT onFailure onSuccess (timeline "Hackage")
   where
