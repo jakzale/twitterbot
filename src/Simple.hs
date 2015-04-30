@@ -73,8 +73,9 @@ timeline name = do
   return $ eitherDecode $ responseBody res
 
 main :: IO ()
-main = do
-  ets <- timeline "Hackage"
-  case ets of
-    Left err -> putStrLn err
-    Right ts -> mapM_ print $ take 5 ts
+main = eitherT onFailure onSuccess (timeline' "Hackage")
+  where
+    onSuccess :: [Tweet] -> IO ()
+    onSuccess ts = mapM_ print $ take 5 ts
+    onFailure :: String -> IO ()
+    onFailure = putStrLn
