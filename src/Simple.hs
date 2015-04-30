@@ -2,9 +2,8 @@
 module Simple where
 
 import Data.Aeson
-import Data.Maybe
-import Control.Monad
 import Web.Authenticate.OAuth
+import Network.HTTP.Conduit
 
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Char8 as C
@@ -13,10 +12,9 @@ import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
 import GHC.Generics
 
-import Network.HTTP.Conduit
+import Control.Monad
 import Control.Monad.Trans.Either
 import Control.Monad.Trans
-import Control.Applicative
 
 instance FromJSON C.ByteString where
   parseJSON =  liftM C.pack . parseJSON
@@ -47,13 +45,13 @@ timeline :: String -> Timeline
 timeline name = do
   -- L.readFile is in IO, so we need to liftIO it
   contents <- liftIO $ L.readFile "config.json"
-  let myoauth = (decode contents :: Maybe OAuth)
-  let mycred  = (decode contents :: Maybe Credential)
+  -- hoistEither lifts Either to EitherT
+  myoauth <- hoistEither $ eitherDecode contents
+  mycred  <- hoistEither $ eitherDecode contents
   req <- parseUrl $ "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=" ++ name
   res <- withManager $ \m -> do
-    signedreq <- signOAuth (fromJust myoauth) (fromJust mycred) req
+    signedreq <- signOAuth myoauth mycred req
     httpLbs signedreq m
-  -- eitherDecode returns Either, hoistEither lifts it to EitherT
   hoistEither $ eitherDecode $ responseBody res
 
 main :: IO ()
