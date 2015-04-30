@@ -18,8 +18,16 @@ instance FromJSON C.ByteString where
   parseJSON =  liftM C.pack . parseJSON
 
 instance FromJSON Credential where
-  parseJSON (Object v) = newCredential <$> v .: "key" <*> v .: "secret"
+  parseJSON (Object v) = newCredential <$> v .: "access_token" <*> v .: "access_token_secret"
 
+myoauth :: C.ByteString -> C.ByteString -> OAuth
+myoauth key secret = newOAuth { oauthServerName     = "api.twitter.com"
+                              , oauthConsumerKey    = key
+                              , oauthConsumerSecret = secret
+                              }
+
+instance FromJSON OAuth where
+  parseJSON (Object v) = myoauth <$> v .: "consumer_key" <*> v .: "consumer_secret"
 
 data Tweet =
   Tweet { text       :: !Text
@@ -40,4 +48,5 @@ main =
   do
     contents <- L.readFile "config.json"
     putStrLn $ show $ (decode contents :: Maybe Credential)
+    putStrLn $ show $ (decode contents :: Maybe OAuth)
 
