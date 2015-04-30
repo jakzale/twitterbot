@@ -20,14 +20,14 @@ instance FromJSON C.ByteString where
 instance FromJSON Credential where
   parseJSON (Object v) = newCredential <$> v .: "access_token" <*> v .: "access_token_secret"
 
-myoauth :: C.ByteString -> C.ByteString -> OAuth
-myoauth key secret = newOAuth { oauthServerName     = "api.twitter.com"
+mkOAuth :: C.ByteString -> C.ByteString -> OAuth
+mkOAuth key secret = newOAuth { oauthServerName     = "api.twitter.com"
                               , oauthConsumerKey    = key
                               , oauthConsumerSecret = secret
                               }
 
 instance FromJSON OAuth where
-  parseJSON (Object v) = myoauth <$> v .: "consumer_key" <*> v .: "consumer_secret"
+  parseJSON (Object v) = mkOAuth <$> v .: "consumer_key" <*> v .: "consumer_secret"
 
 data Tweet =
   Tweet { text       :: !Text
@@ -37,11 +37,18 @@ data Tweet =
 instance FromJSON Tweet
 instance ToJSON Tweet
 
--- timeline :: String -> IO (Either String [Tweet])
--- timeline name = do
---   req <- parseUrl $ "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=" ++ name
---   res <- withManager $ \m -> do
---     signedreq <- signedOAuth 
+timeline :: String -> IO (Either String [Tweet])
+timeline name = do
+  -- Loading Credentials
+  contents <- L.readFile "config.json"
+  myoauth <- (decode contents :: Maybe OAuth)
+  mycred <- (decode contents :: Maybe Credential)
+  -- Creating the Request
+  req <- parseUrl $ "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=" ++ name
+  -- Lets get the response
+  -- TODO: figure out this
+  res <- withManager $ \m -> do
+    signedreq <- signedOAuth 
 
 main :: IO ()
 main =
